@@ -1,28 +1,36 @@
 import axios from 'axios'
-import { ChangeEvent, KeyboardEvent, useEffect, useState } from 'react'
-
-interface ITask {
-  id: string
-  text: string
-}
+import { ChangeEvent, KeyboardEvent, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '../store/store'
+import {
+  setEditModeId,
+  setEditText,
+  setNewTodoValue,
+  setTodos,
+} from './TodoSlice'
 
 const Todo = () => {
-  const [todos, setTodos] = useState<ITask[]>()
-  const [newTodoValue, setNewTodoValue] = useState('')
-  const [editModeId, setEditModeId] = useState<string | null>(null)
-  const [editText, setEditText] = useState<string>('')
-  const [todosTrigger, setTodosTrigger] = useState<number>(0)
+  const dispatch = useDispatch<AppDispatch>()
+
+  const todos = useSelector((state: RootState) => state.todoReducer.todos)
+  const newTodoValue = useSelector(
+    (state: RootState) => state.todoReducer.newTodoValue
+  )
+  const editModeId = useSelector(
+    (state: RootState) => state.todoReducer.editModeId
+  )
+  const editText = useSelector((state: RootState) => state.todoReducer.editText)
 
   useEffect(() => {
     getAllTodo()
-  }, [todosTrigger])
+  }, [])
 
   const changeEditText = (e: ChangeEvent<HTMLInputElement>) => {
-    setEditText(e.target.value)
+    dispatch(setEditText(e.target.value))
   }
 
   const changeNewTodoValue = (e: ChangeEvent<HTMLInputElement>) => {
-    setNewTodoValue(e.target.value)
+    dispatch(setNewTodoValue(e.target.value))
   }
 
   const pressUpdateBtn = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -33,7 +41,7 @@ const Todo = () => {
 
   const clickUpdate = () => {
     updateTodo()
-    setEditModeId(null)
+    dispatch(setEditModeId(null))
   }
 
   const pressAddBtn = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -44,11 +52,11 @@ const Todo = () => {
 
   const clickAdd = () => {
     addTodo()
-    setNewTodoValue('')
+    dispatch(setNewTodoValue(''))
   }
 
   const clickEdit = (id: string) => {
-    setEditModeId(id)
+    dispatch(setEditModeId(id))
   }
 
   const clickDelete = (id: string) => {
@@ -61,7 +69,7 @@ const Todo = () => {
         data: { data },
       } = await axios.get('http://localhost:8080/api/getAllTodo')
       console.log(data)
-      setTodos(data)
+      dispatch(setTodos(data))
     } catch (error) {
       console.log(error)
     }
@@ -80,7 +88,7 @@ const Todo = () => {
     } catch (error) {
       console.log(error)
     }
-    setTodosTrigger(todosTrigger + 1)
+    getAllTodo()
   }
 
   const updateTodo = async () => {
@@ -97,7 +105,7 @@ const Todo = () => {
     } catch (error) {
       console.log(error)
     }
-    setTodosTrigger(todosTrigger + 1)
+    getAllTodo()
   }
 
   const deleteTodo = async (id: string) => {
@@ -109,7 +117,7 @@ const Todo = () => {
     } catch (error) {
       console.log(error)
     }
-    setTodosTrigger(todosTrigger + 1)
+    getAllTodo()
   }
 
   return (
