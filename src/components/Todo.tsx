@@ -12,14 +12,9 @@ import {
 const Todo = () => {
   const dispatch = useDispatch<AppDispatch>()
 
-  const todos = useSelector((state: RootState) => state.todoReducer.todos)
-  const newTodoValue = useSelector(
-    (state: RootState) => state.todoReducer.newTodoValue
+  const { todos, newTodoValue, editModeId, editText } = useSelector(
+    (state: RootState) => state.todoReducer
   )
-  const editModeId = useSelector(
-    (state: RootState) => state.todoReducer.editModeId
-  )
-  const editText = useSelector((state: RootState) => state.todoReducer.editText)
 
   useEffect(() => {
     getAllTodo()
