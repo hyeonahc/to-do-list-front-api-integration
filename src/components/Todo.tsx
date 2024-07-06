@@ -1,13 +1,9 @@
-import axios from 'axios'
+import { unwrapResult } from '@reduxjs/toolkit'
 import { ChangeEvent, KeyboardEvent, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../store/store'
-import {
-  setEditModeId,
-  setEditText,
-  setNewTodoValue,
-  setTodos,
-} from './TodoSlice'
+import { setEditModeId, setEditText, setNewTodoValue } from './TodoSlice'
+import { addTodo, deleteTodo, fetchAllTodos, updateTodo } from './todoThunks'
 
 const Todo = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -17,8 +13,8 @@ const Todo = () => {
   )
 
   useEffect(() => {
-    getAllTodo()
-  }, [])
+    dispatch(fetchAllTodos())
+  }, [dispatch])
 
   const changeEditText = (e: ChangeEvent<HTMLInputElement>) => {
     dispatch(setEditText(e.target.value))
@@ -35,8 +31,17 @@ const Todo = () => {
   }
 
   const clickUpdate = () => {
-    updateTodo()
-    dispatch(setEditModeId(null))
+    if (editModeId) {
+      dispatch(updateTodo({ id: editModeId, text: editText }))
+        .then(unwrapResult)
+        .then(() => {
+          dispatch(fetchAllTodos())
+        })
+        .catch(error => {
+          console.error('Failed to update todo:', error)
+        })
+      dispatch(setEditModeId(null))
+    }
   }
 
   const pressAddBtn = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -46,8 +51,15 @@ const Todo = () => {
   }
 
   const clickAdd = () => {
-    addTodo()
-    dispatch(setNewTodoValue(''))
+    dispatch(addTodo(newTodoValue))
+      .then(unwrapResult)
+      .then(() => {
+        dispatch(fetchAllTodos())
+        dispatch(setNewTodoValue(''))
+      })
+      .catch(error => {
+        console.error('Failed to add todo:', error)
+      })
   }
 
   const clickEdit = (id: string) => {
@@ -55,64 +67,14 @@ const Todo = () => {
   }
 
   const clickDelete = (id: string) => {
-    deleteTodo(id)
-  }
-
-  const getAllTodo = async () => {
-    try {
-      const {
-        data: { data },
-      } = await axios.get('http://localhost:8080/api/getAllTodo')
-      console.log(data)
-      dispatch(setTodos(data))
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  const addTodo = async () => {
-    const newTodo = {
-      text: newTodoValue,
-    }
-    try {
-      const response = await axios.post(
-        'http://localhost:8080/api/addTodo',
-        newTodo
-      )
-      console.log(response.data)
-    } catch (error) {
-      console.log(error)
-    }
-    getAllTodo()
-  }
-
-  const updateTodo = async () => {
-    try {
-      const editedTodo = {
-        id: editModeId,
-        text: editText,
-      }
-      const response = await axios.put(
-        'http://localhost:8080/api/updateTodo',
-        editedTodo
-      )
-      console.log(response.data.message)
-    } catch (error) {
-      console.log(error)
-    }
-    getAllTodo()
-  }
-
-  const deleteTodo = async (id: string) => {
-    try {
-      const response = await axios.delete(
-        `http://localhost:8080/api/deleteTodo?id=${id}`
-      )
-      console.log(response.data.message)
-    } catch (error) {
-      console.log(error)
-    }
-    getAllTodo()
+    dispatch(deleteTodo(id))
+      .then(unwrapResult)
+      .then(() => {
+        dispatch(fetchAllTodos())
+      })
+      .catch(error => {
+        console.error('Failed to delete todo:', error)
+      })
   }
 
   return (
@@ -127,48 +89,46 @@ const Todo = () => {
         <button onClick={clickAdd}>Add</button>
       </div>
       <div>
-        <div>
-          {todos &&
-            todos.map(todo =>
-              todo.id === editModeId ? (
-                <div key={todo.id}>
-                  <input
-                    type='text'
-                    value={editText}
-                    onChange={changeEditText}
-                    onKeyDown={pressUpdateBtn}
-                  />
-                  <button onClick={clickUpdate}>update</button>
-                </div>
-              ) : (
-                <div key={todo.id}>
-                  {todo.text}{' '}
-                  <span
-                    style={{
-                      fontSize: '14px',
-                      color: 'blue',
-                      textDecoration: 'underline',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => clickEdit(todo.id)}
-                  >
-                    edit
-                  </span>{' '}
-                  <span
-                    style={{
-                      fontSize: '14px',
-                      color: 'OrangeRed',
-                      textDecoration: 'underline',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => clickDelete(todo.id)}
-                  >
-                    delete
-                  </span>
-                </div>
-              )
-            )}
-        </div>
+        {todos &&
+          todos.map(todo =>
+            todo.id === editModeId ? (
+              <div key={todo.id}>
+                <input
+                  type='text'
+                  value={editText}
+                  onChange={changeEditText}
+                  onKeyDown={pressUpdateBtn}
+                />
+                <button onClick={clickUpdate}>Update</button>
+              </div>
+            ) : (
+              <div key={todo.id}>
+                {todo.text}{' '}
+                <span
+                  style={{
+                    fontSize: '14px',
+                    color: 'blue',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => clickEdit(todo.id)}
+                >
+                  Edit
+                </span>{' '}
+                <span
+                  style={{
+                    fontSize: '14px',
+                    color: 'OrangeRed',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => clickDelete(todo.id)}
+                >
+                  Delete
+                </span>
+              </div>
+            )
+          )}
       </div>
     </div>
   )

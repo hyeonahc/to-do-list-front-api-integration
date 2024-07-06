@@ -1,22 +1,14 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { ITodos, ITodosState } from '../types/todoTypes'
+import { addTodo, deleteTodo, fetchAllTodos, updateTodo } from './todoThunks'
 
-interface ITodos {
-  id: string
-  text: string
-}
-
-interface TodosState {
-  todos: ITodos[]
-  newTodoValue: string
-  editModeId: string | null
-  editText: string
-}
-
-const initialState: TodosState = {
+const initialState: ITodosState = {
   todos: [],
   newTodoValue: '',
   editModeId: null,
   editText: '',
+  loading: false,
+  error: null,
 }
 
 export const todoSlice = createSlice({
@@ -35,6 +27,57 @@ export const todoSlice = createSlice({
     setEditText: (state, action: PayloadAction<string>) => {
       state.editText = action.payload
     },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchAllTodos.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(
+        fetchAllTodos.fulfilled,
+        (state, action: PayloadAction<ITodos[]>) => {
+          state.loading = false
+          state.todos = action.payload
+        }
+      )
+      .addCase(fetchAllTodos.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(addTodo.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(addTodo.fulfilled, state => {
+        state.loading = false
+      })
+      .addCase(addTodo.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(updateTodo.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateTodo.fulfilled, state => {
+        state.loading = false
+      })
+      .addCase(updateTodo.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      .addCase(deleteTodo.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteTodo.fulfilled, state => {
+        state.loading = false
+      })
+      .addCase(deleteTodo.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   },
 })
 
