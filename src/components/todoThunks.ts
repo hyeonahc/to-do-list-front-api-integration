@@ -5,20 +5,33 @@ import {
   fetchAllTodosApi,
   updateTodoApi,
 } from '../api/todoApi'
-import { ITodos } from '../types/todoTypes'
 
-export const fetchAllTodos = createAsyncThunk<
-  ITodos[],
-  void,
-  { rejectValue: string }
->('todo/fetchAllTodos', async (_, thunkAPI) => {
-  try {
-    const data = await fetchAllTodosApi()
-    return data
-  } catch (error) {
-    return thunkAPI.rejectWithValue('Failed to fetch todos')
+// With Type Annotations
+// export const fetchAllTodos = createAsyncThunk<
+//   ITodos[],
+//   void,
+//   { rejectValue: string }
+// >('todo/fetchAllTodos', async (_, thunkAPI) => {
+//   try {
+//     const data = await fetchAllTodosApi()
+//     return data
+//   } catch (error) {
+//     return thunkAPI.rejectWithValue('Failed to fetch todos')
+//   }
+// })
+
+// Without Type Annotations
+export const fetchAllTodos = createAsyncThunk(
+  'todo/fetchAllTodos',
+  async (_, thunkAPI) => {
+    try {
+      const data = await fetchAllTodosApi()
+      return data
+    } catch (error) {
+      return thunkAPI.rejectWithValue('Failed to fetch todos')
+    }
   }
-})
+)
 
 export const addTodo = createAsyncThunk<void, string, { rejectValue: string }>(
   'todo/addTodo',
