@@ -4,8 +4,10 @@ import { ITodos } from '../types/todoTypes'
 const API_URL = 'http://localhost:8080/api'
 
 export const fetchAllTodosApi = async (): Promise<ITodos[]> => {
-  const response = await axios.get(`${API_URL}/getAllTodo`)
-  return response.data.data
+  const {
+    data: { data },
+  } = await axios.get(`${API_URL}/getAllTodo`)
+  return data
 }
 
 export const addTodoApi = async (text: string): Promise<void> => {
